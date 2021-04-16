@@ -5,6 +5,7 @@ import SurveysUsersRepository from "../repositories/SurveysUsersRepository";
 import UsersRepository from "../repositories/UsersRepository";
 import SendMailService from "../services/SendMailService";
 import path from "path";
+import AppError from "../errors/AppError";
 
 class SendMailController {
   async execute(request: Request, response: Response) {
@@ -17,7 +18,7 @@ class SendMailController {
     const user = await usersRepository.findOne({ email });
 
     if (!user) {
-      return response.status(400).json({ message: "Usuário não encontrado" });
+      throw new AppError("Usuário não encontrado");
     }
 
     const survey = await surveysRepository.findOne({
@@ -25,16 +26,9 @@ class SendMailController {
     });
 
     if (!survey) {
-      return response.status(400).json({ message: "Enquete não encontrado" });
+      throw new AppError("Enquete não encontrada");
     }
 
-    const variables = {
-      name: user.name,
-      title: survey.title,
-      descripton: survey.description,
-      user_id: user.id,
-      link: process.env.URL_MAIL,
-    };
     const npsPath = path.resolve(
       __dirname,
       "..",
@@ -44,11 +38,20 @@ class SendMailController {
     );
 
     const surveyUserAlreadyExists = await surveysUsersRepository.findOne({
-      where: [{ user_id: user.id }, { value: null }],
+      where: { user_id: user.id, value: null },
       relations: ["user", "survey"],
     });
 
+    const variables = {
+      name: user.name,
+      title: survey.title,
+      descripton: survey.description,
+      id: "",
+      link: process.env.URL_MAIL,
+    };
+
     if (surveyUserAlreadyExists) {
+      variables.id = surveyUserAlreadyExists.id;
       await SendMailService.execute(email, survey.title, variables, npsPath);
       return response.json(surveyUserAlreadyExists);
     }
@@ -59,6 +62,7 @@ class SendMailController {
     });
 
     await surveysUsersRepository.save(surveyUser);
+    variables.id = surveyUser.id;
 
     await SendMailService.execute(email, survey.title, variables, npsPath);
 

@@ -3,27 +3,33 @@
    width: 800px;
    display: flex;
    justify-content: center;
-   justify-content: center;
+   align-items: center;
    align-content: center;
    flex-direction: column;
  }
 
  .value {
-   padding: 10px;
+    padding: 10px;
    background: #8257e6;
    color: #fff;
-   margin: 5px;
    border-radius: 6px;
    width: 15px;
    text-align: center;
    text-decoration: none;
  }
 
+ div.answers a:not(:first-child){
+   margin-left: 5px;
+ }
+
  .level {
    display: flex;
-   margin: 10px;
    justify-content: space-between;
    width: 350px;
+ }
+
+ .description {
+   margin-bottom: 10px;
  }
 
  .answers {
@@ -39,7 +45,10 @@
   
   <br/>
 
-  <strong>{{description}}</strong>
+  <div class="description">
+    <strong>{{description}}</strong>
+  </div>
+
   <div class="level">
     <span>Pouco provável</span>
     <span>Muito provável</span>
